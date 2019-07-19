@@ -31,7 +31,6 @@ if __name__ == '__main__':
         actor_units=[64, 64],
         critic_units=[64, 64],
         n_epoch=10,
-        n_epoch_critic=10,
         lr_actor=3e-4,
         lr_critic=3e-4,
         discount=0.99,
