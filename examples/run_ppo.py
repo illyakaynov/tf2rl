@@ -16,6 +16,7 @@ if __name__ == '__main__':
     parser.set_defaults(horizon=2048)
     parser.set_defaults(batch_size=64)
     parser.set_defaults(gpu=-1)
+    parser.set_defaults(normalize_adv=True)
     args = parser.parse_args()
 
     env = gym.make(args.env_name)
