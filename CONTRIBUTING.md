@@ -39,6 +39,13 @@ pip install -e .[examples]
 $ pip install -e .[examples,tf-gpu]
 ```
 
+If you would like to use GPU, then you need to install `cuda==10.0`, and `cudnn>=7.6`.
+Author recomends to use Anaconda. If you use Anaconda, you can install CUDA and cuDNN easily as:
+```bash
+$ conda install -c anaconda cudatoolkit=10.0
+$ conda install -c anaconda cudnn 
+```
+
 ## Codestyle
 
 We follow the [PEP8 codestyle](https://www.python.org/dev/peps/pep-0008/), and suggest the order of the imports as:
