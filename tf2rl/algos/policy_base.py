@@ -1,8 +1,8 @@
-import numpy as np
 import tensorflow as tf
+from tensorflow.python.training.tracking import tracking
 
 
-class Policy(tf.keras.Model):
+class Policy(tracking.AutoTrackable):
     def __init__(
             self,
             name,
