@@ -9,10 +9,7 @@ import tensorflow as tf
 from tf2rl.experiments.utils import save_path, frames_to_gif
 from tf2rl.misc.get_replay_buffer import get_replay_buffer
 from tf2rl.misc.prepare_output_dir import prepare_output_dir
-
-
-logging.root.handlers[0].setFormatter(logging.Formatter(
-    fmt='%(asctime)s [%(levelname)s] (%(filename)s:%(lineno)s) %(message)s'))
+from tf2rl.misc.initialize_logger import initialize_logger
 
 
 gpus = tf.config.experimental.list_physical_devices('GPU')
@@ -22,10 +19,10 @@ if gpus:
         for gpu in gpus:
             tf.config.experimental.set_memory_growth(gpu, True)
         logical_gpus = tf.config.experimental.list_logical_devices('GPU')
-        logging.info(len(gpus), "Physical GPUs,", len(logical_gpus), "Logical GPUs")
+        print(len(gpus), "Physical GPUs,", len(logical_gpus), "Logical GPUs")
     except RuntimeError as e:
         # Memory growth must be set before GPUs have been initialized
-        logging.error(e)
+        print(e)
 
 
 class Trainer:
@@ -44,8 +41,9 @@ class Trainer:
         self._output_dir = prepare_output_dir(
             args=args, user_specified_dir="./results",
             suffix="{}_{}".format(self._policy.policy_name, args.dir_suffix))
-        self.logger = logging.getLogger(__name__)
-        logging.getLogger().setLevel(logging.getLevelName(args.logging_level))
+        self.logger = initialize_logger(
+            logging_level=logging.getLevelName(args.logging_level),
+            output_dir=self._output_dir)
 
         # Save and restore model
         checkpoint = tf.train.Checkpoint(policy=self._policy)
@@ -113,11 +111,14 @@ class Trainer:
 
             if total_steps >= self._policy.n_warmup and total_steps % self._policy.update_interval == 0:
                 samples = replay_buffer.sample(self._policy.batch_size)
-                td_error = self._policy.train(
+                self._policy.train(
                     samples["obs"], samples["act"], samples["next_obs"],
                     samples["rew"], np.array(samples["done"], dtype=np.float32),
                     None if not self._use_prioritized_rb else samples["weights"])
                 if self._use_prioritized_rb:
+                    td_error = self._policy.compute_td_error(
+                        samples["obs"], samples["act"], samples["next_obs"],
+                        samples["rew"], np.array(samples["done"], dtype=np.float32))
                     replay_buffer.update_priorities(
                         samples["indexes"], np.abs(td_error) + 1e-6)
                 if total_steps % self._test_interval == 0:
@@ -144,7 +145,6 @@ class Trainer:
             episode_return = 0.
             frames = []
             obs = self._test_env.reset()
-            done = False
             for _ in range(self._episode_max_steps):
                 action = self._policy.get_action(obs, test=True)
                 next_obs, reward, done, _ = self._test_env.step(action)
