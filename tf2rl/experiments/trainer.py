@@ -10,6 +10,7 @@ from tf2rl.experiments.utils import save_path, frames_to_gif
 from tf2rl.misc.get_replay_buffer import get_replay_buffer
 from tf2rl.misc.prepare_output_dir import prepare_output_dir
 from tf2rl.misc.initialize_logger import initialize_logger
+from tf2rl.misc.fix_seed import fix_tf_seed, fix_np_seed
 
 
 gpus = tf.config.experimental.list_physical_devices('GPU')
@@ -44,6 +45,9 @@ class Trainer:
         self.logger = initialize_logger(
             logging_level=logging.getLevelName(args.logging_level),
             output_dir=self._output_dir)
+        self._seed = args.seed or np.random.randint(low=0, high=int(1e8))
+        fix_tf_seed(self._seed)
+        fix_np_seed(self._seed)
 
         # Save and restore model
         checkpoint = tf.train.Checkpoint(policy=self._policy)
@@ -215,6 +219,8 @@ class Trainer:
                             help='Directory to restore model')
         parser.add_argument('--dir-suffix', type=str, default='',
                             help='Suffix for directory that contains results')
+        parser.add_argument('--seed', type=int, default=None,
+                            help='Random seed to reproduce results')
         # test settings
         parser.add_argument('--test-interval', type=int, default=int(1e4),
                             help='Interval to evaluate trained model')

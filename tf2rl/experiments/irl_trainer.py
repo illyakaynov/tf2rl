@@ -1,14 +1,10 @@
-import os
 import time
 
 import numpy as np
-import argparse
 import tensorflow as tf
 
-from tf2rl.misc.prepare_output_dir import prepare_output_dir
 from tf2rl.misc.get_replay_buffer import get_replay_buffer
 from tf2rl.experiments.trainer import Trainer
-from tf2rl.experiments.utils import save_path
 
 
 class IRLTrainer(Trainer):
